@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>הכוונה לנקודה הקרובה</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* Fullscreen map */
+    #map { position: absolute; top: 0; right: 0; width: 100%; height: 100%; }
+    /* Centered arrow overlay */
+    svg#arrow {
+      position: fixed;
+      top: 50%; right: 50%;
+      width: 100px; height: 100px;
+      margin: -50px -50px 0 0;
+      transform-origin: 50% 80%;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    /* Info box at bottom (RTL) */
+    #info {
+      position: fixed;
+      bottom: 10px;
+      right: 50%;
+      transform: translateX(50%);
+      background: rgba(255,255,255,0.9);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: sans-serif;
+      z-index: 1000;
+      direction: rtl;
+      text-align: right;
+    }
+    /* Tooltip labels RTL */
+    .vertex-label {
+      direction: rtl;
+      text-align: right;
+    }
+    /* Popup content RTL */
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-content {
+      direction: rtl;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <svg id="arrow" viewBox="0 0 100 100">
+    <polygon points="50,0 90,100 50,75 10,100" />
+  </svg>
+  <div id="info">
+    <strong>הקרוב ביותר:</strong> <span id="info-name">–</span>
+    &nbsp;|&nbsp;
+    <strong>מרחק:</strong> <span id="info-dist">–</span>
+  </div>
+  <script id="geojson-data" type="application/json">
+{
+"type": "FeatureCollection",
+"name": "shelters",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "מחסן תחפושות" }, "geometry": { "type": "Point", "coordinates": [ 35.441588648728846, 32.585361389516194 ] } },
+{ "type": "Feature", "properties": { "name": "מועדון ז-ח" }, "geometry": { "type": "Point", "coordinates": [ 35.438537733552806, 32.586048916969617 ] } },
+{ "type": "Feature", "properties": { "name": "מועדון ג-ד" }, "geometry": { "type": "Point", "coordinates": [ 35.438273440648572, 32.586552668014242 ] } },
+{ "type": "Feature", "properties": { "name": "מועדון ה-ו" }, "geometry": { "type": "Point", "coordinates": [ 35.437694818804836, 32.586460782305181 ] } },
+{ "type": "Feature", "properties": { "name": "מול גרסיאני" }, "geometry": { "type": "Point", "coordinates": [ 35.43945506086601, 32.588249834173816 ] } },
+{ "type": "Feature", "properties": { "name": "מאס-סגל" }, "geometry": { "type": "Point", "coordinates": [ 35.439588490293396, 32.584837092238189 ] } },
+{ "type": "Feature", "properties": { "name": "בית כנסת" }, "geometry": { "type": "Point", "coordinates": [ 35.439526265993116, 32.587208296839805 ] } },
+{ "type": "Feature", "properties": { "name": "אריה ברוש" }, "geometry": { "type": "Point", "coordinates": [ 35.437962960634835, 32.588453059559555 ] } },
+{ "type": "Feature", "properties": { "name": "בן שבת" }, "geometry": { "type": "Point", "coordinates": [ 35.44142955979617, 32.588217404548359 ] } },
+{ "type": "Feature", "properties": { "name": "נאווה-ברקן" }, "geometry": { "type": "Point", "coordinates": [ 35.442562426953643, 32.587445035501112 ] } },
+{ "type": "Feature", "properties": { "name": "מזכירות" }, "geometry": { "type": "Point", "coordinates": [ 35.442281455370996, 32.586419703957738 ] } },
+{ "type": "Feature", "properties": { "name": "מולרם" }, "geometry": { "type": "Point", "coordinates": [ 35.442917811101573, 32.585148427898879 ] } },
+{ "type": "Feature", "properties": { "name": "ספרייה" }, "geometry": { "type": "Point", "coordinates": [ 35.439476871445514, 32.587022905168489 ] } }
+]
+}
+
+
+  </script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <script>
+    const vertices = JSON.parse(document.getElementById('geojson-data').textContent);
+    // Initialize the Leaflet map
+    const map = L.map('map');
+    // Tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Zoom to show all vertices (or specify bounds manually)
+    if (vertices.features.length) {
+      const geojsonLayer = L.geoJSON(vertices);
+      map.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
+    } else {
+      // Fallback to a default view
+      map.setView([32.586, 35.441], 15); // Example center and zoom
+    }
+
+    // Human icon for user location
+    const humanIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/1946/1946429.png',
+      iconSize: [32, 37],
+      iconAnchor: [16, 37]
+    });
+
+    // Add vertex markers with labels
+    vertices.features.forEach(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      const name = f.properties.name || f.properties.id;
+      L.marker([lat, lng])
+        .bindPopup(`<strong>${name}</strong>`)
+        .bindTooltip(name, {
+          permanent: true,
+          direction: 'right',
+          offset: [8, 0],
+          className: 'vertex-label'
+        })
+        .addTo(map);
+    });
+
+    const arrowEl = document.getElementById('arrow');
+    const infoName = document.getElementById('info-name');
+    const infoDist = document.getElementById('info-dist');
+    let userMarker, line;
+
+    function onSuccess(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const userPt = turf.point([lng, lat]);
+      // Find nearest vertex
+      const nearest = turf.nearestPoint(userPt, vertices);
+      const [tLng, tLat] = nearest.geometry.coordinates;
+      // Bearing & distance
+      const bearing = turf.bearing(userPt, nearest);
+      const distKm  = turf.distance(userPt, nearest, { units: 'kilometers' });
+      // Rotate arrow
+      arrowEl.style.transform = `rotate(${bearing}deg)`;
+      // Center view on user location (after initial zoom)
+      map.setView([lat, lng], map.getZoom());
+      if (userMarker) map.removeLayer(userMarker);
+      if (line)       map.removeLayer(line);
+      userMarker = L.marker([lat, lng], { icon: humanIcon }).addTo(map);
+      line = L.polyline([[lat, lng], [tLat, tLng]], { color: 'red' }).addTo(map);
+      // Update info
+      infoName.textContent = nearest.properties.name || nearest.properties.id;
+      infoDist.textContent = distKm < 1
+        ? `${(distKm * 1000).toFixed(0)} m`
+        : `${distKm.toFixed(2)} km`;
+    }
+
+    function onError(err) {
+      console.error('Geolocation error:', err.message);
+      alert('לא ניתן לאתר את המיקום שלך.');
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 10000
+      });
+    } else {
+      alert('ה-Geolocation לא נתמך בדפדפן שלך.');
+    }
+  </script>
+</body>
+</html>
