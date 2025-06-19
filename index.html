@@ -153,7 +153,7 @@
     const AllControl = L.Control.extend({ onAdd: () => {
       const btn = L.DomUtil.create('div', 'leaflet-control-button');
       btn.id = 'toggle-all-btn';
-      btn.innerHTML = 'הצג לכלל המיקומים';
+      btn.innerHTML = 'הצג מרחק לכלל המיקומים';
       btn.onclick = toggleAll;
       return btn;
     }});
@@ -161,7 +161,7 @@
 
     // Recenter
     const recenter = ()=>userLatLng && map.setView(userLatLng,map.getZoom());
-    const RecControl=L.Control.extend({onAdd:()=>{const btn=L.DomUtil.create('div','leaflet-control-button');btn.innerHTML='הצג מיקום';btn.onclick=recenter;return btn;}});
+    const RecControl=L.Control.extend({onAdd:()=>{const btn=L.DomUtil.create('div','leaflet-control-button');btn.innerHTML='מקד מפה';btn.onclick=recenter;return btn;}});
     map.addControl(new RecControl({position:'topright'}));
 
     // Track position
