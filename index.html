@@ -33,17 +33,14 @@
       direction: rtl;
       text-align: right;
     }
-    /* Tooltip labels RTL, to the right of marker */
-    .vertex-label {
-      direction: rtl;
-      text-align: right;
-      white-space: nowrap;
-    }
-    /* Popup content RTL */
-    .leaflet-popup-content-wrapper,
-    .leaflet-popup-content {
-      direction: rtl;
-      text-align: right;
+    /* Recenter button */
+    .leaflet-control-recenter {
+      background: white;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -90,7 +87,6 @@
       maxZoom: 18,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-
     // Initial zoom to vertices or fallback
     if (vertices.features.length) {
       const geojsonLayer = L.geoJSON(vertices);
@@ -98,70 +94,56 @@
     } else {
       map.setView([32.586, 35.441], 15);
     }
-
+    // Human icon
     const humanIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/512/1946/1946429.png',
-      iconSize: [32, 37],
-      iconAnchor: [16, 37]
+      iconSize: [32, 37], iconAnchor: [16, 37]
     });
-
-    // Draw vertex markers and labels
+    // Vertex markers
     vertices.features.forEach(f => {
       const [lng, lat] = f.geometry.coordinates;
-      const name = f.properties.name || f.properties.id;
+      const name = f.properties.name;
       L.marker([lat, lng])
         .bindPopup(`<strong>${name}</strong>`)
-        .bindTooltip(name, {
-          permanent: true,
-          direction: 'right',
-          offset: [40, 0],
-          className: 'vertex-label'
-        })
+        .bindTooltip(name, { permanent: true, direction: 'right', offset: [40, 0], className:'vertex-label' })
         .addTo(map);
     });
-
+    // Recenter control
+    let userLatLng = null;
+    const recenterControl = L.Control.extend({
+      onAdd: () => {
+        const btn = L.DomUtil.create('div', 'leaflet-control-recenter');
+        btn.innerHTML = 'חזור למיקום נוכחי';
+        btn.onclick = () => { if (userLatLng) map.setView(userLatLng, map.getZoom()); };
+        return btn;
+      }
+    });
+    map.addControl(new recenterControl({ position: 'topright' }));
     const arrowEl = document.getElementById('arrow');
     const infoName = document.getElementById('info-name');
     const infoDist = document.getElementById('info-dist');
-    let userMarker, line, watchId;
-
+    let userMarker, line, first = true;
     function updatePosition(pos) {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      userLatLng = [lat, lng];
       const userPt = turf.point([lng, lat]);
       const nearest = turf.nearestPoint(userPt, vertices);
       const [tLng, tLat] = nearest.geometry.coordinates;
       const bearing = turf.bearing(userPt, nearest);
       const distKm = turf.distance(userPt, nearest, { units: 'kilometers' });
       arrowEl.style.transform = `rotate(${bearing}deg)`;
-      map.setView([lat, lng], map.getZoom());
+      if (first) { map.setView([lat, lng], map.getZoom()); first = false; }
       if (userMarker) map.removeLayer(userMarker);
-      if (line) line.remove();
+      if (line) map.removeLayer(line);
       userMarker = L.marker([lat, lng], { icon: humanIcon }).addTo(map);
       line = L.polyline([[lat, lng], [tLat, tLng]], { color: 'red' }).addTo(map);
       infoName.textContent = nearest.properties.name;
-      infoDist.textContent = distKm < 1 ? `${(distKm*1000).toFixed(0)} m` : `${distKm.toFixed(2)} km`;
+      infoDist.textContent = distKm <1 ? `${(distKm*1000).toFixed(0)} m` : `${distKm.toFixed(2)} km`;
     }
-
-    function handleError(err) {
-      console.error('Geolocation error:', err.message);
-    }
-
-    // Start watching position for auto updates
+    function handleError(err) { console.error('Geolocation error:', err.message); }
     if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000
-      });
-    } else {
-      alert('ה-Geolocation לא נתמך בדפדפן שלך.');
+      navigator.geolocation.watchPosition(updatePosition, handleError, { enableHighAccuracy:true, maximumAge:0, timeout:10000 });
     }
-
-    // Optional: clear watch on unload
-    window.addEventListener('beforeunload', () => {
-      if (watchId !== undefined) navigator.geolocation.clearWatch(watchId);
-    });
   </script>
 </body>
 </html>
