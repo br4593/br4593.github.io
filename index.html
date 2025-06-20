@@ -11,27 +11,22 @@
     #map { position: absolute; top: 0; right: 0; width: 100%; height: 100%; }
     /* North arrow indicator at top-center as image */
     img#north-arrow {
-      position: fixed;
-      top: 10px; left: 50%;
-      width: 40px; height: 40px;
-      margin-left: -20px;
-      pointer-events: none;
-      opacity: 0.9;
-      z-index: 1002;
+      position: fixed; top: 10px; left: 50%;
+      width: 40px; height: 40px; margin-left: -20px;
+      pointer-events: none; opacity: 0.9; z-index: 1002;
     }
     /* Info box at bottom (RTL) */
     #info {
       position: fixed; bottom: 20px; right: 50%; transform: translateX(50%);
-      background: rgba(0, 0, 0, 0.7); padding: 12px 20px;
+      background: rgba(0,0,0,0.7); padding: 12px 20px;
       border-radius: 6px; font-family: sans-serif; color: #fff;
       font-size: 18px; font-weight: bold; z-index: 1000;
       direction: rtl; text-align: right; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
     #info strong { color: #ffd700; margin-right: 6px; }
     /* Vertex labels */
-    .vertex-label { direction: rtl; text-align: right; white-space: nowrap; }
+    .vertex-label { direction: rtl; text-align: center; white-space: nowrap; }
     .leaflet-popup-content-wrapper, .leaflet-popup-content { direction: rtl; text-align: right; }
-    /* Control buttons */
     /* Control buttons */
     .leaflet-control-button {
       background: #fff; padding: 6px 10px; cursor: pointer;
@@ -40,24 +35,31 @@
       text-align: center; white-space: nowrap; z-index: 1003;
       color: #000;
     }
-    .leaflet-control-button.active {
-      background: #000; color: #fff; border-color: #fff;
-    }
+    .leaflet-control-button.active { background: #000; color: #fff; border-color: #fff; }
     /* Nearest line tooltip styling */
     .leaflet-tooltip.nearest-tooltip {
-      background: rgba(0, 0, 0, 0.8);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.8); color: #fff; border: none;
+      border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
       padding: 4px 8px;
     }
+    /* Side table container */
+    #table-container {
+      position: fixed; top: 0; left: 0; height: 100%; width: 250px;
+      background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+      overflow-y: auto; transform: translateX(-260px);
+      transition: transform 0.3s ease; z-index: 1001;
+    }
+    #table-container.open { transform: translateX(0); }
+    #distance-table { width: 100%; border-collapse: collapse; font-family: sans-serif; }
+    #distance-table th, #distance-table td {
+      padding: 8px; border-bottom: 1px solid #ddd; text-align: right;
+    }
+    #distance-table th { background: #f0f0f0; position: sticky; top: 0; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-
-  <!-- North arrow as image file -->
+  <!-- North arrow -->
   <img id="north-arrow" src="arrow.png" alt="N">
 
   <div id="info">
@@ -66,26 +68,35 @@
     <strong>מרחק:</strong> <span id="info-dist">–</span>
   </div>
 
+  <!-- Side table for distances -->
+  <div id="table-container">
+    <table id="distance-table">
+      <thead><tr><th>שם</th><th>מרחק</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
   <script id="geojson-data" type="application/json">
-{
-"type": "FeatureCollection",
-"name": "shelters",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "name": "מחסן תחפושות" }, "geometry": { "type": "Point", "coordinates": [ 35.441588648728846, 32.585361389516194 ] } },
-{ "type": "Feature", "properties": { "name": "מועדון ז-ח" }, "geometry": { "type": "Point", "coordinates": [ 35.438537733552806, 32.586048916969617 ] } },
-{ "type": "Feature", "properties": { "name": "מועדון ג-ד" }, "geometry": { "type": "Point", "coordinates": [ 35.438273440648572, 32.586552668014242 ] } },
-{ "type": "Feature", "properties": { "name": "מועדון ה-ו" }, "geometry": { "type": "Point", "coordinates": [ 35.437694818804836, 32.586460782305181 ] } },
-{ "type": "Feature", "properties": { "name": "מול גרסיאני" }, "geometry": { "type": "Point", "coordinates": [ 35.43945506086601, 32.588249834173816 ] } },
-{ "type": "Feature", "properties": { "name": "מאס-סגל" }, "geometry": { "type": "Point", "coordinates": [ 35.439588490293396, 32.584837092238189 ] } },
-{ "type": "Feature", "properties": { "name": "בית כנסת" }, "geometry": { "type": "Point", "coordinates": [ 35.439526265993116, 32.587208296839805 ] } },
-{ "type": "Feature", "properties": { "name": "אריה ברוש" }, "geometry": { "type": "Point", "coordinates": [ 35.437962960634835, 32.588453059559555 ] } },
-{ "type": "Feature", "properties": { "name": "בן שבת" }, "geometry": { "type": "Point", "coordinates": [ 35.44142955979617, 32.588217404548359 ] } },
-{ "type": "Feature", "properties": { "name": "נאווה-ברקן" }, "geometry": { "type": "Point", "coordinates": [ 35.442562426953643, 32.587445035501112 ] } },
-{ "type": "Feature", "properties": { "name": "מזכירות" }, "geometry": { "type": "Point", "coordinates": [ 35.442281455370996, 32.586419703957738 ] } },
-{ "type": "Feature", "properties": { "name": "גושן" }, "geometry": { "type": "Point", "coordinates": [ 35.439679581537135, 32.589700507417263 ] } }
-]
-}
+    {
+      "type": "FeatureCollection",
+      "name": "shelters",
+      "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+      "features": [
+      { "type": "Feature", "properties": { "name": "מחסן תחפושות" }, "geometry": { "type": "Point", "coordinates": [ 35.441588648728846, 32.585361389516194 ] } },
+      { "type": "Feature", "properties": { "name": "מועדון ז-ח" }, "geometry": { "type": "Point", "coordinates": [ 35.438537733552806, 32.586048916969617 ] } },
+      { "type": "Feature", "properties": { "name": "מועדון ג-ד" }, "geometry": { "type": "Point", "coordinates": [ 35.438273440648572, 32.586552668014242 ] } },
+      { "type": "Feature", "properties": { "name": "מועדון ה-ו" }, "geometry": { "type": "Point", "coordinates": [ 35.437694818804836, 32.586460782305181 ] } },
+      { "type": "Feature", "properties": { "name": "מול גרסיאני" }, "geometry": { "type": "Point", "coordinates": [ 35.43945506086601, 32.588249834173816 ] } },
+      { "type": "Feature", "properties": { "name": "מאס-סגל" }, "geometry": { "type": "Point", "coordinates": [ 35.439588490293396, 32.584837092238189 ] } },
+      { "type": "Feature", "properties": { "name": "בית כנסת" }, "geometry": { "type": "Point", "coordinates": [ 35.439526265993116, 32.587208296839805 ] } },
+      { "type": "Feature", "properties": { "name": "אריה ברוש" }, "geometry": { "type": "Point", "coordinates": [ 35.437962960634835, 32.588453059559555 ] } },
+      { "type": "Feature", "properties": { "name": "בן שבת" }, "geometry": { "type": "Point", "coordinates": [ 35.44142955979617, 32.588217404548359 ] } },
+      { "type": "Feature", "properties": { "name": "נאווה-ברקן" }, "geometry": { "type": "Point", "coordinates": [ 35.442562426953643, 32.587445035501112 ] } },
+      { "type": "Feature", "properties": { "name": "מזכירות" }, "geometry": { "type": "Point", "coordinates": [ 35.442281455370996, 32.586419703957738 ] } },
+      { "type": "Feature", "properties": { "name": "גושן" }, "geometry": { "type": "Point", "coordinates": [ 35.439679581537135, 32.589700507417263 ] } }
+      ]
+      }
+      
   </script>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -93,100 +104,112 @@
   <script>
     const data = JSON.parse(document.getElementById('geojson-data').textContent);
     const map = L.map('map');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18, attribution: '© OpenStreetMap'
-    }).addTo(map);
-    if (data.features.length) map.fitBounds(L.geoJSON(data).getBounds(), { padding: [20,20] });
-    else map.setView([32.586,35.441],15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+    if (data.features.length) {
+      map.fitBounds(L.geoJSON(data).getBounds(), { padding: [20,20] });
+    } else {
+      map.setView([32.586, 35.441], 15);
+    }
 
     const humanIcon = L.icon({ iconUrl: 'user.png', iconSize: [32,37], iconAnchor: [16,37] });
-
-    // Create markers
     const markers = data.features.map(f => {
       const [lng,lat] = f.geometry.coordinates;
-      const name = f.properties.name;
       return L.marker([lat,lng])
-        .bindPopup(`<strong>${name}</strong>`)
-        .bindTooltip(name, { permanent: true, direction: 'center', offset: [0, 0], className: 'vertex-label' })
+        .bindPopup(`<strong>${f.properties.name}</strong>`)
+        .bindTooltip(f.properties.name, { permanent: true, direction: 'center', offset: [0,0], className: 'vertex-label' })
         .addTo(map);
     });
 
     // Controls
-    let userLatLng = null, allLines = [], showAll = false;
-    let lastNearest = null, lastDist = 0;
-    function toggleAll() {
-      const btn = document.getElementById('toggle-all-btn');
-      // toggle active state
-      showAll = !showAll;
-      if (showAll) {
-        btn.classList.add('active');
-        // hide nearest tooltip
-        if (nearestLine) nearestLine.unbindTooltip();
-        // show all lines
-        markers.forEach((m, i) => {
-          const f = data.features[i];
-          const [lng, lat] = f.geometry.coordinates;
-          const dist = turf.distance(
-            turf.point([userLatLng[1], userLatLng[0]]), turf.point([lng, lat]),
-            { units: 'kilometers' }
-          );
-          const label = `${f.properties.name} - ${dist < 1 ? (dist * 1000).toFixed(0) + ' מטר' : dist.toFixed(2) + ' km'}`;
-          m.setTooltipContent(label);
-          const line = L.polyline([userLatLng, [lat, lng]], { color: 'blue' }).addTo(map);
-          allLines.push(line);
-        });
-      } else {
-        btn.classList.remove('active');
-        // clear all lines
-        allLines.forEach(l => map.removeLayer(l)); allLines = [];
-        // reset marker tooltips
-        markers.forEach((m, i) => m.setTooltipContent(data.features[i].properties.name));
-        // restore nearest tooltip
-        if (nearestLine && lastNearest) {
-          nearestLine.bindTooltip(
-            lastDist < 1 ? (lastDist * 1000).toFixed(0) + ' מטר' : lastDist.toFixed(2) + ' km',
-            { permanent: true, direction: 'center', className: 'nearest-tooltip' }
-          );
-        }
-      }
+    let userLatLng = null, allLines = [], showAll = false, lastDist = 0;
+    function toggleTable() {
+      document.getElementById('table-container').classList.toggle('open');
     }
-    const AllControl = L.Control.extend({ onAdd: () => {
-      const btn = L.DomUtil.create('div', 'leaflet-control-button');
-      btn.id = 'toggle-all-btn';
-      btn.innerHTML = 'הצג מרחק לכלל המיקומים';
-      btn.onclick = toggleAll;
-      return btn;
+    const TableControl = L.Control.extend({ onAdd: () => {
+      const btn = L.DomUtil.create('div','leaflet-control-button');
+      btn.innerHTML = 'טבלת מרחק'; btn.onclick = toggleTable; return btn;
     }});
-    map.addControl(new AllControl({ position: 'topright' }));(new AllControl({ position: 'topright' }));(new AllControl({position:'topright'}));
+    map.addControl(new TableControl({ position: 'topright' }));
 
-    // Recenter
-    const recenter = ()=>userLatLng && map.setView(userLatLng,map.getZoom());
-    const RecControl=L.Control.extend({onAdd:()=>{const btn=L.DomUtil.create('div','leaflet-control-button');btn.innerHTML='מקד מפה';btn.onclick=recenter;return btn;}});
-    map.addControl(new RecControl({position:'topright'}));
+    const recenter = () => userLatLng && map.setView(userLatLng, map.getZoom());
+    const RecControl = L.Control.extend({ onAdd: () => {
+      const btn = L.DomUtil.create('div','leaflet-control-button');
+      btn.innerHTML = 'מקד מפה'; btn.onclick = recenter; return btn;
+    }});
+    map.addControl(new RecControl({ position: 'topright' }));
+
+    const toggleAll = () => {
+      const btn = document.getElementById('toggle-all-btn');
+      showAll = !showAll; btn.classList.toggle('active', showAll);
+      if (nearestLine) nearestLine.unbindTooltip();
+      allLines.forEach(l => map.removeLayer(l)); allLines = [];
+      markers.forEach((m,i) => {
+        const f = data.features[i];
+        const [lng,lat] = f.geometry.coordinates;
+        const dist = turf.distance(turf.point([userLatLng[1],userLatLng[0]]), turf.point([lng,lat]), { units: 'kilometers' });
+        const label = `${f.properties.name} - ${dist < 1 ? (dist*1000).toFixed(0)+' מטר' : dist.toFixed(2)+' km'}`;
+        m.setTooltipContent(label);
+        if (showAll) {
+          const line = L.polyline([userLatLng, [lat,lng]], { color: 'blue' }).addTo(map);
+          allLines.push(line);
+        }
+      });
+      if (!showAll && nearestLine) {
+        nearestLine.bindTooltip(
+          lastDist < 1 ? (lastDist*1000).toFixed(0)+' מטר' : lastDist.toFixed(2)+' km',
+          { permanent: true, direction: 'center', className: 'nearest-tooltip' }
+        );
+      }
+    };
+    const AllControl = L.Control.extend({ onAdd: () => {
+      const btn = L.DomUtil.create('div','leaflet-control-button');
+      btn.id = 'toggle-all-btn'; btn.innerHTML = 'הצג מרחק לכלל המיקומים'; btn.onclick = toggleAll; return btn;
+    }});
+    map.addControl(new AllControl({ position: 'topright' }));
+
+    function updateTable() {
+      const tbody = document.querySelector('#distance-table tbody');
+      tbody.innerHTML = '';
+      const list = data.features.map(f => {
+        const [lng,lat] = f.geometry.coordinates;
+        const d = turf.distance(turf.point([userLatLng[1],userLatLng[0]]), turf.point([lng,lat]), { units: 'kilometers' });
+        return { name: f.properties.name, dist: d };
+      });
+      list.sort((a,b) => a.dist - b.dist);
+      list.forEach(item => {
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td'); tdName.textContent = item.name;
+        const tdDist = document.createElement('td');
+        tdDist.textContent = item.dist < 1 ? (item.dist*1000).toFixed(0)+' מטר' : item.dist.toFixed(2)+' km';
+        tr.append(tdName, tdDist); tbody.append(tr);
+      });
+    }
 
     // Track position
-    let first=true, userMarker, nearestLine;
-    function update(pos){
-      const lat=pos.coords.latitude, lng=pos.coords.longitude;
-      userLatLng=[lat,lng];
-      const up=turf.point([lng,lat]);
-      const nearest=turf.nearestPoint(up,data);
-      lastNearest=nearest;
-      const dist=turf.distance(up,nearest,{units:'kilometers'});
-      lastDist=dist;
-      if(first){map.setView([lat,lng],map.getZoom()); first=false;}
-      if(userMarker) map.removeLayer(userMarker);
-      if(nearestLine) map.removeLayer(nearestLine);
-      userMarker=L.marker([lat,lng],{icon:humanIcon}).addTo(map);
-      nearestLine=L.polyline([[lat,lng],[nearest.geometry.coordinates[1],nearest.geometry.coordinates[0]]],{color:'red'}).addTo(map);
+    let first = true, userMarker, nearestLine;
+    function update(pos) {
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      userLatLng = [lat,lng];
+      const up = turf.point([lng,lat]);
+      const nearest = turf.nearestPoint(up, data);
+      const dist = turf.distance(up, nearest, { units: 'kilometers' });
+      lastDist = dist;
+      if (first) { map.setView([lat,lng], map.getZoom()); first = false; }
+      if (userMarker) map.removeLayer(userMarker);
+      if (nearestLine) map.removeLayer(nearestLine);
+      userMarker = L.marker([lat,lng], { icon: humanIcon }).addTo(map);
+      nearestLine = L.polyline([[lat,lng],[nearest.geometry.coordinates[1],nearest.geometry.coordinates[0]]], { color: 'red' }).addTo(map);
       nearestLine.bindTooltip(
-        dist<1?(dist*1000).toFixed(0)+' מטר':dist.toFixed(2)+' km',
-        {permanent:true,direction:'center',className:'nearest-tooltip'}
+        dist < 1 ? (dist*1000).toFixed(0)+' מטר' : dist.toFixed(2)+' km',
+        { permanent: true, direction: 'center', className: 'nearest-tooltip' }
       );
-      document.getElementById('info-name').textContent=nearest.properties.name;
-      document.getElementById('info-dist').textContent=dist<1?(dist*1000).toFixed(0)+' מטר':dist.toFixed(2)+' km';
+      document.getElementById('info-name').textContent = nearest.properties.name;
+      document.getElementById('info-dist').textContent = dist < 1 ? (dist*1000).toFixed(0)+' מטר' : dist.toFixed(2)+' km';
+      updateTable();
     }
-    navigator.geolocation && navigator.geolocation.watchPosition(update,err=>console.error(err),{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(update, err => console.error(err), { enableHighAccuracy:true, maximumAge:0, timeout:30000 });
+    }
   </script>
 </body>
 </html>
