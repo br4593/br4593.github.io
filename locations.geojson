@@ -1,0 +1,19 @@
+{
+"type": "FeatureCollection",
+"name": "shelters",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "מחסן תחפושות" }, "geometry": { "type": "Point", "coordinates": [ 35.441588648728846, 32.585361389516194 ] } },
+{ "type": "Feature", "properties": { "name": "מועדון ז-ח" }, "geometry": { "type": "Point", "coordinates": [ 35.438537733552806, 32.586048916969617 ] } },
+{ "type": "Feature", "properties": { "name": "מועדון ג-ד" }, "geometry": { "type": "Point", "coordinates": [ 35.438273440648572, 32.586552668014242 ] } },
+{ "type": "Feature", "properties": { "name": "מועדון ה-ו" }, "geometry": { "type": "Point", "coordinates": [ 35.437694818804836, 32.586460782305181 ] } },
+{ "type": "Feature", "properties": { "name": "מול גרסיאני" }, "geometry": { "type": "Point", "coordinates": [ 35.43945506086601, 32.588249834173816 ] } },
+{ "type": "Feature", "properties": { "name": "מאס-סגל" }, "geometry": { "type": "Point", "coordinates": [ 35.439588490293396, 32.584837092238189 ] } },
+{ "type": "Feature", "properties": { "name": "בית כנסת" }, "geometry": { "type": "Point", "coordinates": [ 35.439526265993116, 32.587208296839805 ] } },
+{ "type": "Feature", "properties": { "name": "אריה ברוש" }, "geometry": { "type": "Point", "coordinates": [ 35.437962960634835, 32.588453059559555 ] } },
+{ "type": "Feature", "properties": { "name": "בן שבת" }, "geometry": { "type": "Point", "coordinates": [ 35.44142955979617, 32.588217404548359 ] } },
+{ "type": "Feature", "properties": { "name": "נאווה-ברקן" }, "geometry": { "type": "Point", "coordinates": [ 35.442562426953643, 32.587445035501112 ] } },
+{ "type": "Feature", "properties": { "name": "מזכירות" }, "geometry": { "type": "Point", "coordinates": [ 35.442281455370996, 32.586419703957738 ] } },
+{ "type": "Feature", "properties": { "name": "גושן" }, "geometry": { "type": "Point", "coordinates": [ 35.439679581537135, 32.589700507417263 ] } }
+]
+}
