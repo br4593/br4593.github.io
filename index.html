@@ -12,7 +12,24 @@
     /* North arrow indicator */
     img#north-arrow { position: fixed; top: 10px; left: 50%; width: 40px; height: 40px; margin-left: -20px; pointer-events: none; opacity: 0.9; z-index: 1002; }
     /* Info box */
-    #info { position: fixed; bottom: 20px; right: 50%; transform: translateX(50%); background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 6px; font-family: sans-serif; color: #fff; font-size: 18px; font-weight: bold; z-index: 1000; direction: rtl; text-align: right; box-shadow: 0 2px 6px rgba(0,0,0,0.5);   white-space: normal; word-wrap: break-word; }
+    #info {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;              /* center horizontally */
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 1000;
+      direction: rtl;
+      text-align: center;     /* center text */
+      white-space: normal;
+      word-wrap: break-word;
+    }
     #info strong { color: #ffd700; margin-right: 6px; }
     /* Vertex labels */
     .vertex-label { direction: rtl; text-align: center; white-space: normal; }
@@ -34,15 +51,30 @@
     /* Notes panel */
     #notes-container h3 { margin: 0; padding: 12px; background: #f0f0f0; position: sticky; top: 0; }
     #notes-area { padding: 8px; font-family: sans-serif; }
+    /* Mobile responsiveness */
+    @media (max-width: 600px) {
+      #info {
+        right: 10px !important;
+        left: 10px !important;
+        transform: none !important;
+        width: auto;
+        padding: 8px;
+        font-size: 16px;
+      }
+      .info-line {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <img id="north-arrow" src="arrow.png" alt="N" />
   <div id="info">
-    <strong>הקרוב ביותר:</strong> <span id="info-name">–</span>
-    &nbsp;|&nbsp;
-    <strong>מרחק:</strong> <span id="info-dist">–</span>
+    <div class="info-line"><strong>הקרוב ביותר:</strong> <span id="info-name">–</span></div>
+    <div class="info-line"><strong>מרחק:</strong> <span id="info-dist">–</span></div>
   </div>
 
   <!-- Distance Table Panel -->
