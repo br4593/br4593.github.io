@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>הכוונה לנקודה הקרובה</title>
+  <title>מקלטים מולדת</title>
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -15,7 +15,7 @@
     #info {
       position: fixed;
       bottom: 20px;
-      left: 50%;              /* center horizontally */
+      left: 50%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.7);
       padding: 12px 20px;
@@ -26,7 +26,7 @@
       font-weight: bold;
       z-index: 1000;
       direction: rtl;
-      text-align: center;     /* center text */
+      text-align: center;
       white-space: normal;
       word-wrap: break-word;
     }
@@ -54,9 +54,9 @@
     /* Mobile responsiveness */
     @media (max-width: 600px) {
       #info {
-        right: 10px !important;
         left: 10px !important;
         transform: none !important;
+        right: 10px !important;
         width: auto;
         padding: 8px;
         font-size: 16px;
@@ -115,8 +115,8 @@
 }
   </script>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <script	src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script	src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
   <script>
     const data = JSON.parse(document.getElementById('geojson-data').textContent);
     // Base layers
@@ -134,26 +134,27 @@
     const humanIcon = L.icon({iconUrl:'user.png',iconSize:[32,37],iconAnchor:[16,37]});
     const markers = data.features.map(f=>{
       const [lng,lat]=f.geometry.coordinates;
-      return L.marker([lat,lng])
+      return	L.marker([lat,lng])
         .bindPopup(`<strong>${f.properties.name}</strong>`)
         .bindTooltip(`<strong>${f.properties.name}</strong><br><span class="distance">–</span>`,{permanent:true,direction:'center',offset:[0,-10],className:'vertex-label'})
         .addTo(map);
     });
 
-    let userLatLng,allLines=[],showAll=false,lastDist=0,userMarker,nearestLine,first=true;
+    let userLatLng,allLines=[],showAll=false,showDirect=false,lastDist=0,userMarker,nearestLine,first=true; // showDirect toggles nearest line
 
     const createBtn=(txt)=>{const btn=L.DomUtil.create('div','leaflet-control-button');btn.innerHTML=txt;return btn;};
-    // Controls
-    const tableCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('טבלת מרחקים');btn.onclick=()=>{document.getElementById('table-container').classList.toggle('open');btn.classList.toggle('active');};return btn;}}))({position:'topright'});map.addControl(tableCtrl);
-    const showAllCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('הצג לכלל המיקומים');btn.onclick=()=>{toggleAll();btn.classList.toggle('active');};return btn;}}))({position:'topright'});map.addControl(showAllCtrl);
+    // Controls (reordered)
     const recenterCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('מקד מפה');btn.onclick=()=>{if(userLatLng)map.setView(userLatLng,map.getZoom());};return btn;}}))({position:'topright'});map.addControl(recenterCtrl);
-    const notesCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('חשוב לקרוא');btn.onclick=()=>{document.getElementById('notes-container').classList.toggle('open');btn.classList.toggle('active');};return btn;}}))({position:'topright'});map.addControl(notesCtrl);
+    const directCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('הצג קו ישיר למקלט הקרוב ביותר');btn.onclick=()=>{showDirect=!showDirect;btn.classList.toggle('active');if(!showDirect&&nearestLine){map.removeLayer(nearestLine);nearestLine=null;}else if(showDirect&&userLatLng){update({coords:{latitude:userLatLng[0],longitude:userLatLng[1]}});} };return btn;}}))({position:'topright'});map.addControl(directCtrl);
+    const showAllCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('הצג קווים לכל המקלטים');btn.onclick=()=>{toggleAll();btn.classList.toggle('active');};return btn;}}))({position:'topright'});map.addControl(showAllCtrl);
+    const tableCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('טבלת מרחקים');btn.onclick=()=>{document.getElementById('table-container').classList.toggle('open');btn.classList.toggle('active');};return btn;}}))({position:'topright'});map.addControl(tableCtrl);
+    const notesCtrl=new(L.Control.extend({onAdd:()=>{const btn=createBtn('!חשוב לקרוא');btn.onclick=()=>{document.getElementById('notes-container').classList.toggle('open');btn.classList.toggle('active');};return btn;}}))({position:'topright'});map.addControl(notesCtrl);
 
-    function toggleAll(){showAll=!showAll;if(nearestLine)nearestLine.unbindTooltip();allLines.forEach(l=>map.removeLayer(l));allLines=[];markers.forEach((m,i)=>{const f=data.features[i],[lng,lat]=f.geometry.coordinates;const d=turf.distance(turf.point([userLatLng[1],userLatLng[0]]),turf.point([lng,lat]),{units:'kilometers'});const label=`<strong>${f.properties.name}</strong><br><span class="distance">${d<1?(d*1000).toFixed(0)+' מטר':d.toFixed(2)+' km'}</span>`;m.setTooltipContent(label);if(showAll)allLines.push(L.polyline([userLatLng,[lat,lng]],{color:'blue'}).addTo(map));});if(!showAll&&nearestLine)nearestLine.bindTooltip(lastDist<1?(lastDist*1000).toFixed(0)+' מטר':lastDist.toFixed(2)+' km',{permanent:true,direction:'center',className:'nearest-tooltip'});} 
+    function toggleAll(){showAll=!showAll;if(nearestLine)nearestLine.unbindTooltip();allLines.forEach(l=>map.removeLayer(l));allLines=[];markers.forEach((m,i)=>{const f=data.features[i],[lng,lat]=f.geometry.coordinates;const d=turf.distance(turf.point([userLatLng[1],userLatLng[0]]),turf.point([lng,lat]),{units:'kilometers'});const label=`<strong>${f.properties.name}</strong><br><span class="distance">${d<1?(d*1000).toFixed(0)+' מטר':d.toFixed(2)+' km'}</span>`;m.setTooltipContent(label);if(showAll)allLines.push(L.polyline([userLatLng,[lat,lng]],{color:'blue'}).addTo(map));});if(!showAll&&nearestLine)nearestLine.bindTooltip(lastDist<1?(lastDist*1000).toFixed(0)+' מטר':lastDist.toFixed(2)+' km',{permanent:true,direction:'center',className:'nearest-tooltip'});}  
 
-    function updateTable(){const tbody=document.querySelector('#distance-table tbody');tbody.innerHTML='';const list=data.features.map(f=>{const [lng,lat]=f.geometry.coordinates;return{name:f.properties.name,dist:turf.distance(turf.point([userLatLng[1],userLatLng[0]]),turf.point([lng,lat]),{units:'kilometers'})};});list.sort((a,b)=>a.dist-b.dist);list.forEach(it=>{const tr=document.createElement('tr'),td1=document.createElement('td'),td2=document.createElement('td');td1.textContent=it.name;td2.textContent=it.dist<1?(it.dist*1000).toFixed(0)+' מטר':it.dist.toFixed(2)+' km';tr.append(td1,td2);tbody.append(tr);});} 
+    function updateTable(){const tbody=document.querySelector('#distance-table tbody');tbody.innerHTML='';const list=data.features.map(f=>{const [lng,lat]=f.geometry.coordinates;return{name:f.properties.name,dist:turf.distance(turf.point([userLatLng[1],userLatLng[0]]),turf.point([lng,lat]),{units:'kilometers'})};});list.sort((a,b)=>a.dist-b.dist);list.forEach(it=>{const tr=document.createElement('tr'),td1=document.createElement('td'),td2=document.createElement('td');td1.textContent=it.name;td2.textContent=it.dist<1?(it.dist*1000).toFixed(0)+' מטר':it.dist.toFixed(2)+' km';tr.append(td1,td2);tbody.append(tr);});}  
 
-    function update(pos){const lat=pos.coords.latitude,lng=pos.coords.longitude;userLatLng=[lat,lng];const up=turf.point([lng,lat]),nearest=turf.nearestPoint(up,data),d=turf.distance(up,nearest,{units:'kilometers'});lastDist=d;if(first){map.setView([lat,lng],map.getZoom());first=false;}if(userMarker)map.removeLayer(userMarker);if(nearestLine)map.removeLayer(nearestLine);userMarker=L.marker([lat,lng],{icon:humanIcon}).addTo(map);nearestLine=L.polyline([[lat,lng],[nearest.geometry.coordinates[1],nearest.geometry.coordinates[0]]],{color:'red'}).addTo(map);nearestLine.bindTooltip(d<1?(d*1000).toFixed(0)+' מטר':d.toFixed(2)+' km',{permanent:true,direction:'center',className:'nearest-tooltip'});document.getElementById('info-name').textContent=nearest.properties.name;document.getElementById('info-dist').textContent=d<1?(d*1000).toFixed(0)+' מטר':d.toFixed(2)+' km';markers.forEach((m,i)=>{const f=data.features[i],[lgn,latn]=f.geometry.coordinates;const dist=turf.distance(turf.point([userLatLng[1],userLatLng[0]]),turf.point([lgn,latn]),{units:'kilometers'});const distLabel=dist<1?(dist*1000).toFixed(0)+' מטר':dist.toFixed(2)+' km';m.setTooltipContent(`<strong>${f.properties.name}</strong><br><span class="distance">${distLabel}</span>`);});updateTable();}if(navigator.geolocation)navigator.geolocation.watchPosition(update,err=>console.error(err),{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+    function update(pos){const lat=pos.coords.latitude,lng=pos.coords.longitude;userLatLng=[lat,lng];const up=turf.point([lng,lat]),nearest=turf.nearestPoint(up,data),d=turf.distance(up,nearest,{units:'kilometers'});lastDist=d;if(first){map.setView([lat,lng],map.getZoom());first=false;}if(userMarker)map.removeLayer(userMarker);if(nearestLine)map.removeLayer(nearestLine);userMarker=L.marker([lat,lng],{icon:humanIcon}).addTo(map);if(showDirect){nearestLine=L.polyline([[lat,lng],[nearest.geometry.coordinates[1],nearest.geometry.coordinates[0]]],{color:'red'}).addTo(map);nearestLine.bindTooltip(d<1?(d*1000).toFixed(0)+' מטר':d.toFixed(2)+' km',{permanent:true,direction:'center',className:'nearest-tooltip'});}document.getElementById('info-name').textContent=nearest.properties.name;document.getElementById('info-dist').textContent=d<1?(d*1000).toFixed(0)+' מטר':d.toFixed(2)+' km';markers.forEach((m,i)=>{const f=data.features[i],[lgn,latn]=f.geometry.coordinates;const dist=turf.distance(turf.point([userLatLng[1],userLatLng[0]]),turf.point([lgn,latn]),{units:'kilometers'});const distLabel=dist<1?(dist*1000).toFixed(0)+' מטר':dist.toFixed(2)+' km';m.setTooltipContent(`<strong>${f.properties.name}</strong><br><span class="distance">${distLabel}</span>`);});updateTable();}if(navigator.geolocation)navigator.geolocation.watchPosition(update,err=>console.error(err),{enableHighAccuracy:true,maximumAge:0,timeout:30000});
   </script>
 </body>
 </html>
